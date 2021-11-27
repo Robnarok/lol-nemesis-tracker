@@ -28,7 +28,7 @@ func main() {
 		fmt.Println("error creating Discord session,", err)
 		return
 	}
-	dg.Identify.Intents = discordgo.IntentsAll
+	dg.Identify.Intents = discordgo.IntentsGuildMessages
 
 	err = dg.Open()
 	if err != nil {
