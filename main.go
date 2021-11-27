@@ -80,7 +80,11 @@ func checkMatchhistory(client *golio.Client, summonerToCheck string, nemesisName
 	fmt.Print(matchesToCheck)
 
 	for _, matchName := range matchesToCheck {
-		match, _ := client.Riot.LoL.Match.Get(matchName)
+		match, err := client.Riot.LoL.Match.Get(matchName)
+
+		if err != nil {
+			fmt.Println(fmt.Errorf(err.Error()))
+		}
 		fmt.Print(time.Unix(match.Info.GameStartTimestamp/1000, 0))
 		fmt.Print(": ")
 		participants := match.Info.Participants
@@ -97,12 +101,16 @@ func checkMatchhistory(client *golio.Client, summonerToCheck string, nemesisName
 }
 
 func fetchMatchList(client *golio.Client, summonerToCheck string) []string {
-	summoner, _ := client.Riot.LoL.Summoner.GetByName(summonerToCheck)
+	summoner, err := client.Riot.LoL.Summoner.GetByName(summonerToCheck)
+
+	if err != nil {
+		fmt.Println(fmt.Errorf(err.Error()))
+	}
 	checked_matches := database.GetAllEntrys()
 	matches, err := client.Riot.LoL.Match.List(summoner.PUUID, 0, 5)
 
 	if err != nil {
-		fmt.Errorf(err.Error())
+		fmt.Println(fmt.Errorf(err.Error()))
 	}
 
 	matchesToCheck := make([]string, 0)
