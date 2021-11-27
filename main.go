@@ -21,14 +21,13 @@ var Dg *discordgo.Session
 
 func main() {
 	config.ReadConfig()
-
-	config.ReadConfig()
 	dg, err := discordgo.New("Bot " + config.DiscordToken)
 	if err != nil {
 		fmt.Println("error creating Discord session,", err)
 		return
 	}
 	dg.Identify.Intents = discordgo.IntentsGuildMessages
+	dg.Identify.Intents = discordgo.IntentsAllWithoutPrivileged
 
 	err = dg.Open()
 	if err != nil {
@@ -41,6 +40,8 @@ func main() {
 	setupDatabase()
 	c := cron.New()
 	Dg = dg
+
+	setupGalio()
 	c.AddFunc("@every 30m", setupGalio)
 	c.Start()
 
