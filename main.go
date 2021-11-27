@@ -6,19 +6,48 @@ import (
 	"nemesisbot/config"
 	"nemesisbot/database"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/KnutZuidema/golio"
 	"github.com/KnutZuidema/golio/api"
 	"github.com/KnutZuidema/golio/riot/lol"
+	"github.com/bwmarrin/discordgo"
+	"gopkg.in/robfig/cron.v2"
 )
+
+var Dg *discordgo.Session
 
 func main() {
 	config.ReadConfig()
 
-	setupDatabase()
-	setupGalio()
+	config.ReadConfig()
+	dg, err := discordgo.New("Bot " + config.DiscordToken)
+	if err != nil {
+		fmt.Println("error creating Discord session,", err)
+		return
+	}
+	dg.Identify.Intents = discordgo.IntentsAll
 
+	err = dg.Open()
+	if err != nil {
+		fmt.Println("error opening connection,", err)
+		return
+	}
+
+	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
+
+	setupDatabase()
+	c := cron.New()
+	Dg = dg
+	c.AddFunc("@every 1m", setupGalio)
+	c.Start()
+
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+	<-sc
+	dg.Close()
 }
 func setupDatabase() {
 	databasefolders := "sqlite/"
@@ -33,9 +62,15 @@ func setupDatabase() {
 }
 
 func setupGalio() {
+	fmt.Print("Showtime!\n")
 	client := golio.NewClient(config.RiotToken,
 		golio.WithRegion(api.RegionEuropeWest))
-	checkMatchhistory(client, "DreiAugenFlappe", "Teemo")
+
+	allSummonersToCheck := database.GetAllSummoners()
+
+	for _, summonersToCheck := range allSummonersToCheck {
+		checkMatchhistory(client, summonersToCheck.Name, summonersToCheck.Nemesis)
+	}
 }
 
 func checkMatchhistory(client *golio.Client, summonerToCheck string, nemesisName string) {
@@ -50,7 +85,8 @@ func checkMatchhistory(client *golio.Client, summonerToCheck string, nemesisName
 		participants := match.Info.Participants
 		nemesisID := findNemesis(participants, nemesisName)
 		if nemesisID >= 0 {
-			fmt.Printf(participants[nemesisID].SummonerName)
+			output := fmt.Sprintf("%s:\n %s \n %d mal gestorben \nMehr Infos unter:\n  https://www.leagueofgraphs.com/match/euw/%d", time.Unix(match.Info.GameStartTimestamp/1000, 0), participants[nemesisID].SummonerName, participants[nemesisID].Deaths, match.Info.GameID)
+			Dg.ChannelMessageSend(config.DiscordChannel, output)
 		} else {
 			fmt.Printf("Kein Nemesis im Match")
 		}
@@ -88,28 +124,3 @@ func findNemesis(participants []*lol.Participant, nemesisName string) int {
 	}
 	return -1
 }
-
-//config.ReadConfig()
-//dg, err := discordgo.New("Bot " + config.DiscordToken)
-//if err != nil {
-//	fmt.Println("error creating Discord session,", err)
-//	return
-//}
-//
-////eventhandler.Init()
-////dg.AddHandler(eventhandler.VoiceChannelCreate)
-//
-//dg.Identify.Intents = discordgo.IntentsAll
-//
-//err = dg.Open()
-//if err != nil {
-//	fmt.Println("error opening connection,", err)
-//	return
-//}
-//
-//fmt.Println("Bot is now running.  Press CTRL-C to exit.")
-//sc := make(chan os.Signal, 1)
-//signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
-//<-sc
-//
-//dg.Close()

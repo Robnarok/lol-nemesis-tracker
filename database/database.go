@@ -43,7 +43,7 @@ func CreateDatabase() {
 	createSummonerTable(sqliteDatabase)
 }
 func createSummonerTable(db *sql.DB) {
-	createSummonerTableSQL := `CREATE TABLE trackedSummoner (
+	createSummonerTableSQL := `CREATE TABLE trackedSummoners (
 		"id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,		
 		"name" TEXT,
 		"nemesis" TEXT
@@ -71,8 +71,8 @@ func createEntryTable(db *sql.DB) {
 }
 
 func AddSummoner(name string, nemesis string) {
-	sqliteDatabase, _ := sql.Open("sqlite3", "./"+databasepath)                                          // Open the created SQLite File
-	statement, err := sqliteDatabase.Prepare(`INSERT INTO trackedSummoner(name, nemesis) VALUES (?, ?)`) // Prepare statement. This is good to avoid SQL injections
+	sqliteDatabase, _ := sql.Open("sqlite3", "./"+databasepath)                                           // Open the created SQLite File
+	statement, err := sqliteDatabase.Prepare(`INSERT INTO trackedSummoners(name, nemesis) VALUES (?, ?)`) // Prepare statement. This is good to avoid SQL injections
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -98,9 +98,9 @@ func AddEntry(match string, date string) {
 	fmt.Println(queryStatus.RowsAffected())
 }
 
-func GetAllSummoners() []Entry {
+func GetAllSummoners() []TrackedSummoners {
 	sqliteDatabase, _ := sql.Open("sqlite3", "./"+databasepath) // Open the created SQLite File
-	entries := []Entry{}
+	trackedSummoner := []TrackedSummoners{}
 	row, err := sqliteDatabase.Query("SELECT * FROM trackedsummoners")
 	if err != nil {
 		log.Fatal(err)
@@ -112,11 +112,11 @@ func GetAllSummoners() []Entry {
 		var nemesis string
 
 		err = row.Scan(&id, &name, &nemesis)
-		entries = append(entries, Entry{name, nemesis})
+		trackedSummoner = append(trackedSummoner, TrackedSummoners{name, nemesis})
 
 	}
 
-	return entries
+	return trackedSummoner
 
 }
 

@@ -8,16 +8,18 @@ import (
 
 var (
 	// Public variables
-	DiscordToken string
-	RiotToken    string
+	DiscordToken   string
+	RiotToken      string
+	DiscordChannel string
 
 	// Private variables
 	config *configStruct
 )
 
 type configStruct struct {
-	DiscordToken string `json:"DiscordToken"`
-	RiotToken    string `json:"RiotToken"`
+	DiscordToken   string `json:"DiscordToken"`
+	RiotToken      string `json:"RiotToken"`
+	DiscordChannel string `json:"DiscordChannel"`
 }
 
 func ReadConfig() error {
@@ -41,6 +43,7 @@ func ReadConfig() error {
 
 	DiscordToken = config.DiscordToken
 	RiotToken = config.RiotToken
+	DiscordChannel = config.DiscordChannel
 
 	return nil
 }
