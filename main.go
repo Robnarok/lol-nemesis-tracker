@@ -41,7 +41,7 @@ func main() {
 	setupDatabase()
 	c := cron.New()
 	Dg = dg
-	c.AddFunc("@every 1m", setupGalio)
+	c.AddFunc("@every 30m", setupGalio)
 	c.Start()
 
 	sc := make(chan os.Signal, 1)
