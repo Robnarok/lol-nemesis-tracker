@@ -1,6 +1,6 @@
 version: '3'
 services:
-  voicebot:
+  nemesisbot:
      build: .
      container_name: discord-voicebot
      restart: unless-stopped
