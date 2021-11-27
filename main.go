@@ -30,38 +30,63 @@ func setupDatabase() {
 	if _, err := os.Stat(databasepath); errors.Is(err, os.ErrNotExist) {
 		database.CreateDatabase()
 	}
-
-	database.AddEntry("foo", "bar")
-
 }
 
 func setupGalio() {
 	client := golio.NewClient(config.RiotToken,
 		golio.WithRegion(api.RegionEuropeWest))
-	summoner, _ := client.Riot.LoL.Summoner.GetByName("DreiAugenFlappe")
-	matches, _ := client.Riot.LoL.Match.List(summoner.PUUID, 0, 5)
+	checkMatchhistory(client, "DreiAugenFlappe", "Teemo")
+}
 
-	for _, matchName := range matches {
+func checkMatchhistory(client *golio.Client, summonerToCheck string, nemesisName string) {
 
+	matchesToCheck := fetchMatchList(client, summonerToCheck)
+	fmt.Print(matchesToCheck)
+
+	for _, matchName := range matchesToCheck {
 		match, _ := client.Riot.LoL.Match.Get(matchName)
 		fmt.Print(time.Unix(match.Info.GameStartTimestamp/1000, 0))
 		fmt.Print(": ")
 		participants := match.Info.Participants
-
-		findNemesis(participants)
-
+		nemesisID := findNemesis(participants, nemesisName)
+		if nemesisID >= 0 {
+			fmt.Printf(participants[nemesisID].SummonerName)
+		} else {
+			fmt.Printf("Kein Nemesis im Match")
+		}
 		fmt.Print("\n")
+		database.AddEntry(fmt.Sprintf("%d", match.Info.GameID), fmt.Sprint(match.Info.GameStartTimestamp))
 	}
 }
 
-func findNemesis(participants []*lol.Participant) int {
+func fetchMatchList(client *golio.Client, summonerToCheck string) []string {
+	summoner, _ := client.Riot.LoL.Summoner.GetByName(summonerToCheck)
+	checked_matches := database.GetAllEntrys()
+	matches, _ := client.Riot.LoL.Match.List(summoner.PUUID, 0, 5)
+	matchesToCheck := make([]string, 0)
+	foobar := true
+
+	for _, matchFromLastMatches := range matches {
+		for _, matchFromAllMatches := range checked_matches {
+			if "EUW1_"+matchFromAllMatches.Match == matchFromLastMatches {
+				foobar = false
+			}
+		}
+		if foobar {
+			matchesToCheck = append(matchesToCheck, matchFromLastMatches)
+			foobar = true
+		}
+	}
+	return matchesToCheck
+}
+
+func findNemesis(participants []*lol.Participant, nemesisName string) int {
 	for id, participant := range participants {
-		fmt.Print(id)
-		fmt.Print(" ")
-		fmt.Print(participant.ChampionName + ", ")
+		if participant.ChampionName == nemesisName {
+			return id
+		}
 	}
 	return -1
-
 }
 
 //config.ReadConfig()
