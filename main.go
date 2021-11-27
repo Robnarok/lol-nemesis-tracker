@@ -1,0 +1,46 @@
+package main
+
+import (
+	"errors"
+	"nemesisbot/database"
+	"os"
+)
+
+func main() {
+	databasefolders := "sqlite/"
+	databasename := "database.db"
+	os.Mkdir(databasefolders, os.ModePerm)
+
+	databasepath := databasefolders + databasename
+	database.Init(databasepath)
+	if _, err := os.Stat(databasepath); errors.Is(err, os.ErrNotExist) {
+		database.CreateDatabase()
+	}
+
+	database.AddEntry("foo", "bar")
+
+	//config.ReadConfig()
+	//dg, err := discordgo.New("Bot " + config.DiscordToken)
+	//if err != nil {
+	//	fmt.Println("error creating Discord session,", err)
+	//	return
+	//}
+	//
+	////eventhandler.Init()
+	////dg.AddHandler(eventhandler.VoiceChannelCreate)
+	//
+	//dg.Identify.Intents = discordgo.IntentsAll
+	//
+	//err = dg.Open()
+	//if err != nil {
+	//	fmt.Println("error opening connection,", err)
+	//	return
+	//}
+	//
+	//fmt.Println("Bot is now running.  Press CTRL-C to exit.")
+	//sc := make(chan os.Signal, 1)
+	//signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+	//<-sc
+	//
+	//dg.Close()
+}
