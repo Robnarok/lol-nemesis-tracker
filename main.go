@@ -99,7 +99,12 @@ func checkMatchhistory(client *golio.Client, summonerToCheck string, nemesisName
 func fetchMatchList(client *golio.Client, summonerToCheck string) []string {
 	summoner, _ := client.Riot.LoL.Summoner.GetByName(summonerToCheck)
 	checked_matches := database.GetAllEntrys()
-	matches, _ := client.Riot.LoL.Match.List(summoner.PUUID, 0, 5)
+	matches, err := client.Riot.LoL.Match.List(summoner.PUUID, 0, 5)
+
+	if err != nil {
+		fmt.Errorf(err.Error())
+	}
+
 	matchesToCheck := make([]string, 0)
 	foobar := true
 
