@@ -90,8 +90,27 @@ func checkMatchhistory(client *golio.Client, summonerToCheck string, nemesisName
 		participants := match.Info.Participants
 		nemesisID := findNemesis(participants, nemesisName)
 		if nemesisID >= 0 {
-			output := fmt.Sprintf("%s:\n %s \n %d mal gestorben \nMehr Infos unter:\n  https://www.leagueofgraphs.com/match/euw/%d", time.Unix(match.Info.GameStartTimestamp/1000, 0), participants[nemesisID].SummonerName, participants[nemesisID].Deaths, match.Info.GameID)
-			Dg.ChannelMessageSend(config.DiscordChannel, output)
+			participantNemesis := participants[nemesisID]
+
+			teamcolor := 255
+			if participantNemesis.TeamID == 1 {
+				teamcolor = 16711680
+			}
+
+			fotter := discordgo.MessageEmbedFooter{
+				Text: fmt.Sprint(time.Unix(match.Info.GameStartTimestamp/1000, 0)),
+			}
+
+			foo := discordgo.MessageEmbed{
+				Title:       participantNemesis.SummonerName,
+				Description: fmt.Sprintf("%d mal gestorben!", participantNemesis.Deaths),
+				Color:       teamcolor,
+				URL:         fmt.Sprintf("https://www.leagueofgraphs.com/match/euw/%d", match.Info.GameID),
+				Footer:      &fotter,
+			}
+			Dg.ChannelMessageSendEmbed(config.DiscordChannel, &foo)
+			//output := fmt.Sprintf("%s:\n %s \n %d mal gestorben \nMehr Infos unter:\n  https://www.leagueofgraphs.com/match/euw/%d", time.Unix(match.Info.GameStartTimestamp/1000, 0), participants[nemesisID].SummonerName, participants[nemesisID].Deaths, match.Info.GameID)
+			//Dg.ChannelMessageSend(config.DiscordChannel, output)
 		} else {
 			fmt.Printf("Kein Nemesis im Match")
 		}
